@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Matiere;
 use App\Models\Classe;
+use App\Models\EnseignantMatiereClasse;
 
 class Enseignant extends Model
 {
@@ -42,4 +44,10 @@ class Enseignant extends Model
             'enseignant_matiere_classe'
         )->withPivot('matiere_id')->withTimestamps();
     }
+
+    public function affectations(): HasMany
+    {
+        return $this->hasMany(EnseignantMatiereClasse::class);
+    }
+
 }

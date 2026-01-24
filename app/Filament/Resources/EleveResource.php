@@ -162,8 +162,11 @@ class EleveResource extends Resource
                     ->icon('heroicon-o-envelope')
                     ->copyable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('photo')
-                    ->searchable(),
+                Tables\Columns\ImageColumn::make('photo')
+                    ->label('Photo')
+                    ->disk('public') 
+                    ->circular()
+                    ->size(40),
                 Tables\Columns\TextColumn::make('statut')
                     ->badge()
                     ->color(fn ($state) => $state === 'actif' ? 'success' : 'danger')

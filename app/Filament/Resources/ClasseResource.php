@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ClasseResource\Pages;
-use App\Filament\Resources\ClasseResource\RelationManagers;
 use App\Models\Classe;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -11,7 +10,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
@@ -20,7 +18,6 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\Indicator;
 use Carbon\Carbon;
-
 
 class ClasseResource extends Resource
 {
@@ -50,7 +47,7 @@ class ClasseResource extends Resource
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Le nombre de classe';
+        return 'Le nombre de classes';
     }
 
     public static function form(Form $form): Form
@@ -58,12 +55,14 @@ class ClasseResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('Informations sur la classe')
+                    ->icon('heroicon-o-rectangle-stack')
                     ->schema([
                         Forms\Components\TextInput::make('nom_classe')
                             ->label('Nom de la classe')
                             ->required()
                             ->maxLength(255)
-                            ->columnSpan('full'),
+                            ->columnSpan('full')
+                            ->prefixIcon('heroicon-o-user'),
 
                         Forms\Components\Select::make('niveau')
                             ->label('Niveau')
@@ -73,21 +72,23 @@ class ClasseResource extends Resource
                                 'college' => 'Collège',
                                 'lycee' => 'Lycée',
                             ])
-                            ->reactive()
-                            ->required(),
+                            ->required()
+                            ->prefixIcon('heroicon-o-academic-cap'),
 
                         Forms\Components\TextInput::make('filiere')
                             ->label('Filière')
                             ->visible(fn ($get) => $get('niveau') === 'lycee')
                             ->placeholder('Exemple : Science, Littéraire')
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->prefixIcon('heroicon-o-book-open'),
 
                         Forms\Components\TextInput::make('effectif_max')
                             ->label('Effectif maximum')
                             ->numeric()
                             ->minValue(1)
                             ->maxValue(200)
-                            ->suffix('élèves'),
+                            ->suffix('élèves')
+                            ->prefixIcon('heroicon-o-users'),
                     ]),
             ])->columns(3);
     }
@@ -99,85 +100,77 @@ class ClasseResource extends Resource
                 Tables\Columns\TextColumn::make('nom_classe')
                     ->label('Classe')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-o-user'),
+
                 Tables\Columns\TextColumn::make('niveau')
+                    ->label('Niveau')
                     ->badge()
-                    ->color(fn (string $state) => match ($state) {
-                        'prescolaire' => 'gray',
-                        'primaire'    => 'success',
-                        'college'     => 'warning',
-                        'lycee'       => 'danger',
-                        default       => 'secondary',
-                    })
-                    ->searchable(),
+                    ->searchable()
+                    ->icon('heroicon-o-academic-cap'),
+
                 Tables\Columns\TextColumn::make('filiere')
-                    ->searchable(),
+                    ->label('Filière')
+                    ->searchable()
+                    ->icon('heroicon-o-book-open'),
+
                 Tables\Columns\TextColumn::make('effectif_max')
-                   ->counts('eleves')
                     ->label('Effectif')
+                    ->counts('eleves')
                     ->badge()
-                    ->color(function ($state) {
-                        if ($state < 20) return 'success';   
-                        if ($state < 40) return 'warning';   
-                        return 'danger';                     
-                    }),
+                    ->icon('heroicon-o-users'),
+
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Créé le')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->icon('heroicon-o-clock'),
+
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Mis à jour le')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->icon('heroicon-o-clock'),
             ])
             ->filters([
                 SelectFilter::make('niveau')
                     ->label('Niveau')
                     ->options([
                         'prescolaire' => 'Préscolaire',
-                        'primaire'    => 'Primaire',
-                        'college'     => 'Collège',
-                        'lycee'       => 'Lycée',
+                        'primaire' => 'Primaire',
+                        'college' => 'Collège',
+                        'lycee' => 'Lycée',
                     ]),
 
                 Filter::make('created_at')
                     ->form([
-                        DatePicker::make('created_from'),
-                        DatePicker::make('created_until'),
+                        DatePicker::make('created_from')->label('Depuis'),
+                        DatePicker::make('created_until')->label('Jusqu\'à'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when(
-                                $data['created_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
-                            )
-                            ->when(
-                                $data['created_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
-                            );
+                            ->when($data['created_from'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
+                            ->when($data['created_until'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date));
                     })
-
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
-
-                        if ($data['from'] ?? null) {
-                            $indicators[] = Indicator::make('Created from ' . Carbon::parse($data['from'])->toFormattedDateString())
-                                ->removeField('from');
+                        if ($data['created_from'] ?? null) {
+                            $indicators[] = Indicator::make('Depuis ' . Carbon::parse($data['created_from'])->toFormattedDateString())
+                                ->removeField('created_from');
                         }
-
-                        if ($data['until'] ?? null) {
-                            $indicators[] = Indicator::make('Created until ' . Carbon::parse($data['until'])->toFormattedDateString())
-                                ->removeField('until');
+                        if ($data['created_until'] ?? null) {
+                            $indicators[] = Indicator::make('Jusqu\'à ' . Carbon::parse($data['created_until'])->toFormattedDateString())
+                                ->removeField('created_until');
                         }
-
                         return $indicators;
-                    })
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
-                    ->requiresConfirmation(),
+                Tables\Actions\DeleteAction::make()->requiresConfirmation(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -186,35 +179,35 @@ class ClasseResource extends Resource
             ]);
     }
 
-     // Infolist pour la vue detaillée
-
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
             ->schema([
                 Section::make('Informations sur la classe')
-                ->schema([
-                TextEntry::make('nom_classe')
-                    ->label('Nom de la classe'),
-                TextEntry::make('niveau')
-                    ->label('Niveau'),
-                TextEntry::make('filiere')
-                    ->label('Filière'),
-                TextEntry::make('effectif_max')
-                    ->label('Effectif maximum'),
-                ])->columns(4),
-                    
-                
+                    ->icon('heroicon-o-rectangle-stack')
+                    ->schema([
+                        TextEntry::make('nom_classe')
+                            ->label('Nom de la classe')
+                            ->icon('heroicon-o-user'),
+
+                        TextEntry::make('niveau')
+                            ->label('Niveau')
+                            ->icon('heroicon-o-academic-cap'),
+
+                        TextEntry::make('filiere')
+                            ->label('Filière')
+                            ->icon('heroicon-o-book-open'),
+
+                        TextEntry::make('effectif_max')
+                            ->label('Effectif maximum')
+                            ->icon('heroicon-o-users'),
+                    ])->columns(4),
             ]);
     }
 
-     
-
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

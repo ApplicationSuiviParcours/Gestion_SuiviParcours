@@ -29,9 +29,11 @@ class DatabaseSeeder extends Seeder
             InscriptionSeeder::class,
             MatiereSeeder::class,
             EnseignantSeeder::class,
+            EnseignantMatiereClasseSeeder::class,
             EvaluationSeeder::class,
             NoteSeeder::class,
             AbsenceSeeder::class,
+            ParametreSeeder::class,
         ]);
     }
 }

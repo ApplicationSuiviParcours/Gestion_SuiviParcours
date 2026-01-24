@@ -64,39 +64,45 @@ class AbsenceResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                Forms\Components\Section::make('Informations sur l\'absence')
-            ->schema([
-                Forms\Components\Select::make('eleve_id')
-                    ->relationship('eleve', 'nom')
-                    ->label('Élève')
-                    ->prefixIcon('heroicon-o-user')
-                    ->required()
-                    ->searchable(),
+           ->schema([
+            Forms\Components\Section::make('Informations sur l\'absence')
+                ->schema([
+                    Forms\Components\Select::make('eleve_id')
+                        ->relationship('eleve', 'nom')
+                        ->label('Élève')
+                        ->prefixIcon('heroicon-o-user')
+                        ->required()
+                        ->searchable(),
 
-            Forms\Components\DatePicker::make('date_absence')
-                ->prefixIcon('heroicon-o-calendar')
-                ->required(),
+                    Forms\Components\DatePicker::make('date_absence')
+                        ->label('Date de l\'absence')
+                        ->prefixIcon('heroicon-o-calendar-days')
+                        ->required(),
 
-            Forms\Components\RichEditor::make('motif')
-                ->placeholder('Exemple : Maladie, Rendez-vous médical, Retard…')
-                ->required()
-                ->columnSpan('full')
-                ->toolbarButtons([
-                    'bold',        
-                    'italic',      
-                    'underline',   
-                    'bulletList',  
-                    'numberList',  
-                    'link',        
-                    'redo',        
-                    'undo',        
-                ]),
+                    Forms\Components\RichEditor::make('motif')
+                        ->label('Motif de l\'absence')
+                        ->placeholder('Exemple : Maladie, Rendez-vous médical, Retard…')
+                        ->required()
+                        ->columnSpan('full')
+                        ->toolbarButtons([
+                            'bold',
+                            'italic',
+                            'underline',
+                            'strike',
+                            'bulletList',
+                            'numberList',
+                            'link',
+                            'redo',
+                            'undo',
+                        ]),
 
-                Forms\Components\Toggle::make('justifie')
-                    ->required(),
-            ])
-            ])->columns(3);
+                    Forms\Components\Toggle::make('justifie')
+                        ->label('Absence justifiée')
+                        ->required(),
+                ])
+                ->columns(3),
+        ]);
+
     }
 
     public static function table(Table $table): Table
@@ -199,34 +205,43 @@ class AbsenceResource extends Resource
 
     // Infolist pour la vue detaillée
 
-    public static function infolist(Infolist $infolist): Infolist
-    {
-        return $infolist
-            ->schema([
-                Section::make('Informations sur l\'absence')
-                ->icon('heroicon-o-user')
+   public static function infolist(Infolist $infolist): Infolist
+{
+    return $infolist
+        ->schema([
+            Section::make('Informations sur l\'absence')
+                ->icon('heroicon-o-exclamation-triangle')
                 ->schema([
-                TextEntry::make('eleve.nom')
-                    ->label('Élève'),
-                TextEntry::make('date_absence')
-                    ->label('Date de l\'absence')
-                    ->date(),
-                TextEntry::make('motif')
-                    ->label('Motif'),
-                ])->columns(3),
-                Section::make('Justification')
-                ->icon('heroicon-o-check-circle')
+                    TextEntry::make('eleve.nom')
+                        ->label('Élève')
+                        ->icon('heroicon-o-user'),
+
+                    TextEntry::make('date_absence')
+                        ->label('Date de l\'absence')
+                        ->icon('heroicon-o-calendar-days')
+                        ->date(),
+
+                    TextEntry::make('motif')
+                        ->label('Motif de l\'absence')
+                        ->icon('heroicon-o-document-text'),
+                ])
+                ->columns(3),
+
+            Section::make('Justification')
+                ->icon('heroicon-o-shield-check')
                 ->schema([
-                TextEntry::make('justifie')
-                    ->label('Justifiée')
-                    ->badge()
-                    ->color(fn (string $state) =>
-                            $state === 'justifie' ? 'danger' : 'success'
+                    TextEntry::make('justifie')
+                        ->label('Absence justifiée')
+                        ->icon(fn (bool $state) =>
+                            $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle'
                         )
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non'),
+                        ->badge()
+                        ->color(fn (bool $state) => $state ? 'success' : 'danger')
+                        ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non'),
                 ]),
-            ]);
-    }
+        ]);
+}
+
 
 
     public static function getRelations(): array

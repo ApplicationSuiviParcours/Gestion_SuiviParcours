@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use App\Models\Inscription;
 use App\Models\Eleve;
+use App\Models\EnseignantMatiereClasse;
 
 class Classe extends Model
 {
@@ -42,4 +43,10 @@ class Classe extends Model
             'eleve_id'          // clé étrangère dans inscriptions vers eleves
         );
     }
+
+    public function affectations(): HasMany
+    {
+        return $this->hasMany(EnseignantMatiereClasse::class);
+    }
+
 }

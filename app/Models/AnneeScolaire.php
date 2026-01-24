@@ -27,4 +27,7 @@ class AnneeScolaire extends Model
     {
         return $this->hasMany(Inscription::class, 'annee_id', 'id');
     }
+
+
+
 }

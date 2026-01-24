@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\EnseignantResource\Pages;
-use App\Filament\Resources\EnseignantResource\RelationManagers;
 use App\Models\Enseignant;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -11,11 +10,10 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Infolists\Infolist;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\Indicator;
@@ -31,8 +29,7 @@ class EnseignantResource extends Resource
     protected static ?string $pluralModelLabel = 'Enseignants';
     protected static ?int $navigationSort = 5;
 
-    
-    // 🔐 SÉCURITÉ
+    // 🔐 Sécurité
     public static function canViewAny(): bool
     {
         return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
@@ -50,7 +47,7 @@ class EnseignantResource extends Resource
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Le nombre d\'enseignant';
+        return 'Nombre total d\'enseignants';
     }
 
     public static function form(Form $form): Form
@@ -58,21 +55,35 @@ class EnseignantResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('Informations Personnelles')
-                ->schema([
-                    Forms\Components\TextInput::make('nom')
-                        ->required(),
-                    Forms\Components\TextInput::make('prenom')
-                        ->required(),
-                    Forms\Components\TextInput::make('specialite')
-                        ->required(),
-                    Forms\Components\TextInput::make('telephone')
-                        ->tel()
-                        ->required(),
-                    Forms\Components\TextInput::make('email')
-                        ->email()
-                        ->required()
-                        ->columnSpan('full'),
-                ])->columns(2)
+                    ->schema([
+                        Forms\Components\TextInput::make('nom')
+                            ->label('Nom')
+                            ->required()
+                            ->prefixIcon('heroicon-o-user'),
+
+                        Forms\Components\TextInput::make('prenom')
+                            ->label('Prénom')
+                            ->required()
+                            ->prefixIcon('heroicon-o-user'),
+
+                        Forms\Components\TextInput::make('specialite')
+                            ->label('Spécialité')
+                            ->required()
+                            ->prefixIcon('heroicon-o-academic-cap'),
+
+                        Forms\Components\TextInput::make('telephone')
+                            ->label('Téléphone')
+                            ->tel()
+                            ->required()
+                            ->prefixIcon('heroicon-o-phone'),
+
+                        Forms\Components\TextInput::make('email')
+                            ->label('Email')
+                            ->email()
+                            ->required()
+                            ->prefixIcon('heroicon-o-envelope')
+                            ->columnSpan('full'),
+                    ])->columns(2),
             ]);
     }
 
@@ -81,40 +92,53 @@ class EnseignantResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('nom')
+                    ->label('Nom')
+                    ->icon('heroicon-o-user')
                     ->searchable(),
+
                 Tables\Columns\TextColumn::make('prenom')
+                    ->label('Prénom')
+                    ->icon('heroicon-o-user')
                     ->searchable(),
+
                 Tables\Columns\TextColumn::make('specialite')
+                    ->label('Spécialité')
+                    ->icon('heroicon-o-academic-cap')
                     ->searchable(),
+
                 Tables\Columns\TextColumn::make('telephone')
+                    ->label('Téléphone')
+                    ->icon('heroicon-o-phone')
                     ->searchable(),
+
                 Tables\Columns\TextColumn::make('email')
+                    ->label('Email')
+                    ->icon('heroicon-o-envelope')
                     ->searchable(),
+
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Créé le')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Mis à jour le')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
             ])
-             ->filters([
+            ->filters([
                 SelectFilter::make('nom')
-                ->options(
-                    \App\Models\Enseignant::pluck('nom', 'nom')->toArray()
-                )
-                ->label('Nom Enseignant'),
+                    ->options(\App\Models\Enseignant::whereNotNull('nom')->pluck('nom', 'nom')->toArray())
+                    ->label('Nom Enseignant'),
+
                 SelectFilter::make('prenom')
-                ->options(
-                    \App\Models\Enseignant::pluck('prenom', 'prenom')->toArray()
-                )
-                ->label('Prenom Enseignant'),
+                    ->options(\App\Models\Enseignant::whereNotNull('prenom')->pluck('prenom', 'prenom')->toArray())
+                    ->label('Prénom Enseignant'),
+
                 SelectFilter::make('specialite')
-                ->options(
-                    \App\Models\Enseignant::pluck('specialite', 'specialite')->toArray()
-                )
-                ->label('Spécialité Enseignant'),
+                    ->options(\App\Models\Enseignant::whereNotNull('specialite')->pluck('specialite', 'specialite')->toArray())
+                    ->label('Spécialité'),
+
                 Filter::make('created_at')
                     ->form([
                         DatePicker::make('created_from'),
@@ -123,37 +147,31 @@ class EnseignantResource extends Resource
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
-                                $data['created_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                                $data['created_from'] ?? null,
+                                fn (Builder $query, $date) => $query->whereDate('created_at', '>=', $date)
                             )
                             ->when(
-                                $data['created_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                                $data['created_until'] ?? null,
+                                fn (Builder $query, $date) => $query->whereDate('created_at', '<=', $date)
                             );
                     })
-
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
-
-                        if ($data['from'] ?? null) {
-                            $indicators[] = Indicator::make('Created from ' . Carbon::parse($data['from'])->toFormattedDateString())
-                                ->removeField('from');
+                        if ($data['created_from'] ?? null) {
+                            $indicators[] = Indicator::make('Depuis ' . Carbon::parse($data['created_from'])->toFormattedDateString())
+                                ->removeField('created_from');
                         }
-
-                        if ($data['until'] ?? null) {
-                            $indicators[] = Indicator::make('Created until ' . Carbon::parse($data['until'])->toFormattedDateString())
-                                ->removeField('until');
+                        if ($data['created_until'] ?? null) {
+                            $indicators[] = Indicator::make('Jusqu\'à ' . Carbon::parse($data['created_until'])->toFormattedDateString())
+                                ->removeField('created_until');
                         }
-
                         return $indicators;
-                    })
+                    }),
             ])
-
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
-                    ->requiresConfirmation(),
+                Tables\Actions\DeleteAction::make()->requiresConfirmation(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -162,36 +180,38 @@ class EnseignantResource extends Resource
             ]);
     }
 
-    // Infolist utilisée pour voir les détails
-
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
             ->schema([
-                Section::make('Informations personnelle')
-                ->schema([
-                TextEntry::make('nom')
-                    ->label('Nom Enseignant'),
-                TextEntry::make('prenom')
-                    ->label('Prenom Ensegnant'),
-                TextEntry::make('specialite')
-                    ->label('Spécialité'),
-                TextEntry::make('telephone')
-                    ->label('Telephone'),
-                TextEntry::make('email')
-                    ->label('Email'),
-                ])->columns(4),
-                    
-                
+                Section::make('Informations personnelles')
+                    ->schema([
+                        TextEntry::make('nom')
+                            ->label('Nom')
+                            ->icon('heroicon-o-user'),
+
+                        TextEntry::make('prenom')
+                            ->label('Prénom')
+                            ->icon('heroicon-o-user'),
+
+                        TextEntry::make('specialite')
+                            ->label('Spécialité')
+                            ->icon('heroicon-o-academic-cap'),
+
+                        TextEntry::make('telephone')
+                            ->label('Téléphone')
+                            ->icon('heroicon-o-phone'),
+
+                        TextEntry::make('email')
+                            ->label('Email')
+                            ->icon('heroicon-o-envelope'),
+                    ])->columns(2),
             ]);
     }
 
-
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

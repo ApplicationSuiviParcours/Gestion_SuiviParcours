@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\EvaluationResource\Pages;
-use App\Filament\Resources\EvaluationResource\RelationManagers;
 use App\Models\Evaluation;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -11,33 +10,27 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\Indicator;
 use Carbon\Carbon;
-use Filament\Infolists\Infolist;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\Section;
 
 class EvaluationResource extends Resource
 {
     protected static ?string $model = Evaluation::class;
 
     protected static ?string $navigationGroup = 'Scolarité';
-
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
-
-    protected static ?string $navigationLabel = 'Evaluations';
-
-    protected static ?string $pluralModelLabel = 'Evaluations';
-
+    protected static ?string $navigationLabel = 'Évaluations';
+    protected static ?string $pluralModelLabel = 'Évaluations';
     protected static ?int $navigationSort = 8;
-
     protected static ?string $recordTitleAttribute = 'type_evaluation';
 
-     // 🔐 SÉCURITÉ
+    // 🔐 Sécurité
     public static function canViewAny(): bool
     {
         return auth()->user()->hasRole(['Administrateur', 'Enseignant', 'Scolarite']);
@@ -55,36 +48,48 @@ class EvaluationResource extends Resource
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Le nombre de type d\'évaluation';
+        return 'Le nombre de types d\'évaluation';
     }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                    Forms\Components\Section::make('Informations sur l\'évaluation')
-                        ->schema([
-                            Forms\Components\Select::make('type_evaluation')
-                                ->options(['devoir'=>'Devoir','examen'=>'Examen'])
-                                ->required(),
+                Forms\Components\Section::make('Informations sur l\'évaluation')
+                    ->schema([
+                        Forms\Components\Select::make('type_evaluation')
+                            ->label('Type d\'évaluation')
+                            ->options([
+                                'devoir' => 'Devoir',
+                                'examen' => 'Examen',
+                            ])
+                            ->required()
+                            ->prefixIcon('heroicon-o-document-text'),
 
-                            Forms\Components\DatePicker::make('date_evaluation')
-                                ->required(),
+                        Forms\Components\DatePicker::make('date_evaluation')
+                            ->label('Date d\'évaluation')
+                            ->required()
+                            ->prefixIcon('heroicon-o-calendar'),
 
-                            Forms\Components\Select::make('classe_id')
-                                ->relationship('classe','nom_classe')
-                                ->required(),
+                        Forms\Components\Select::make('classe_id')
+                            ->relationship('classe','nom_classe')
+                            ->label('Classe')
+                            ->required()
+                            ->prefixIcon('heroicon-o-rectangle-stack'),
 
-                            Forms\Components\Select::make('matiere_id')
-                                ->relationship('matiere','libelle')
-                                ->required(),
+                        Forms\Components\Select::make('matiere_id')
+                            ->relationship('matiere','libelle')
+                            ->label('Matière')
+                            ->required()
+                            ->prefixIcon('heroicon-o-book-open'),
 
-                            Forms\Components\Select::make('annee_id')
-                                ->relationship('annee','libelle')
-                                ->required(),
-                        ])->columns(2) 
-                ]);
-
+                        Forms\Components\Select::make('annee_id')
+                            ->relationship('annee','libelle')
+                            ->label('Année scolaire')
+                            ->required()
+                            ->prefixIcon('heroicon-o-calendar-days'),
+                    ])->columns(2),
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -92,86 +97,86 @@ class EvaluationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('type_evaluation')
+                    ->label('Type')
+                    ->icon('heroicon-o-document-text')
                     ->searchable()
-                    ->sortable()
-                    ->badge()
-                    ->color(fn ($state) =>
-                        $state === 'examen' ? 'danger' :
-                        ($state === 'devoir' ? 'warning' : 'info')
-                    ),
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('date_evaluation')
+                    ->label('Date')
+                    ->icon('heroicon-o-calendar')
                     ->date()
                     ->searchable()
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('classe.nom_classe')
-                    ->numeric()
+                    ->label('Classe')
+                    ->icon('heroicon-o-rectangle-stack')
                     ->searchable()
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('matiere.libelle')
-                    ->numeric()
+                    ->label('Matière')
+                    ->icon('heroicon-o-book-open')
+                    ->searchable()
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('annee.libelle')
-                    ->numeric()
+                    ->label('Année')
+                    ->icon('heroicon-o-calendar-days')
                     ->searchable()
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Créé le')
+                    ->icon('heroicon-o-clock')
                     ->dateTime()
-                    ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Mis à jour le')
+                    ->icon('heroicon-o-clock')
                     ->dateTime()
-                    ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('type_evaluation')
+                    ->label('Type d\'évaluation')
                     ->options([
-                        'devoir'=>'Devoir',
-                        'interrogation'=>'Interrogation',
-                        'examen'=>'Examen',
-            ]),
+                        'devoir' => 'Devoir',
+                        'interrogation' => 'Interrogation',
+                        'examen' => 'Examen',
+                    ]),
 
-            Filter::make('created_at')
+                Filter::make('created_at')
                     ->form([
-                        DatePicker::make('created_from'),
-                        DatePicker::make('created_until'),
+                        DatePicker::make('created_from')->label('Depuis'),
+                        DatePicker::make('created_until')->label('Jusqu\'à'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when(
-                                $data['created_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
-                            )
-                            ->when(
-                                $data['created_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
-                            );
+                            ->when($data['created_from'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
+                            ->when($data['created_until'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date));
                     })
-
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
-
-                        if ($data['from'] ?? null) {
-                            $indicators[] = Indicator::make('Created from ' . Carbon::parse($data['from'])->toFormattedDateString())
-                                ->removeField('from');
+                        if ($data['created_from'] ?? null) {
+                            $indicators[] = Indicator::make('Depuis ' . Carbon::parse($data['created_from'])->toFormattedDateString())
+                                ->removeField('created_from');
                         }
-
-                        if ($data['until'] ?? null) {
-                            $indicators[] = Indicator::make('Created until ' . Carbon::parse($data['until'])->toFormattedDateString())
-                                ->removeField('until');
+                        if ($data['created_until'] ?? null) {
+                            $indicators[] = Indicator::make('Jusqu\'à ' . Carbon::parse($data['created_until'])->toFormattedDateString())
+                                ->removeField('created_until');
                         }
-
                         return $indicators;
-                    })
-                
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
-                    ->requiresConfirmation(),
+                Tables\Actions\DeleteAction::make()->requiresConfirmation(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -180,39 +185,39 @@ class EvaluationResource extends Resource
             ]);
     }
 
-    // Infolist pour la vue detaillée
-
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
             ->schema([
-                Section::make('Detail sur l\'évaluation')
-                ->schema([
-                TextEntry::make('type_evaluation')
-                    ->label('Type Evaluation'),
-                TextEntry::make('date_evaluation')
-                    ->label('Date Evaluation')
-                    ->date(),
-                TextEntry::make('classe.nom_classe')
-                    ->label('Nom de la classe'),
-                TextEntry::make('matiere.libelle')
-                    ->label('Libelle de la matiere'),
-                    TextEntry::make('annee.libelle')
-                    ->label('Libelle Anneé'),
-                ])->columns(3),
-               
-                
-                
+                Section::make('Détails de l\'évaluation')
+                    ->schema([
+                        TextEntry::make('type_evaluation')
+                            ->label('Type d\'évaluation')
+                            ->icon('heroicon-o-document-text'),
+
+                        TextEntry::make('date_evaluation')
+                            ->label('Date')
+                            ->icon('heroicon-o-calendar')
+                            ->date(),
+
+                        TextEntry::make('classe.nom_classe')
+                            ->label('Classe')
+                            ->icon('heroicon-o-rectangle-stack'),
+
+                        TextEntry::make('matiere.libelle')
+                            ->label('Matière')
+                            ->icon('heroicon-o-book-open'),
+
+                        TextEntry::make('annee.libelle')
+                            ->label('Année scolaire')
+                            ->icon('heroicon-o-calendar-days'),
+                    ])->columns(3),
             ]);
     }
 
-   
-
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

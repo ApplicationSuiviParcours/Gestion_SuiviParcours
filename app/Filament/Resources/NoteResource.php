@@ -62,45 +62,61 @@ class NoteResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Saisir la note de l\'élève')
-                    ->schema([
-                        Forms\Components\Select::make('evaluation_id')
-                            ->relationship('evaluation','type_evaluation')
-                            ->required(),
-                        Forms\Components\Select::make('eleve_id')
-                            ->relationship('eleve','nom')->required(),
-                        Forms\Components\TextInput::make('valeur')
-                            ->numeric()
-                            ->required(),
-                    ])->columns(3)
+                Forms\Components\Section::make('Saisie de la note')
+                ->icon('heroicon-o-pencil-square')
+                ->schema([
+                    Forms\Components\Select::make('evaluation_id')
+                        ->label('Évaluation')
+                        ->relationship('evaluation','type_evaluation')
+                        ->required(),
+
+                    Forms\Components\Select::make('eleve_id')
+                        ->label('Élève')
+                        ->relationship('eleve','nom')
+                        ->required(),
+
+                    Forms\Components\TextInput::make('valeur')
+                        ->label('Note')
+                        ->numeric()
+                        ->required(),
+                ])
+                ->columns(3)
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('evaluation.type_evaluation')
-                    ->numeric()
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('eleve.nom')
-                    ->numeric()
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('valeur')
-                    ->searchable()
-                    ->badge()
-                    ->color(fn ($state) =>
-                        $state < 10 ? 'danger' :
-                        ($state < 14 ? 'warning' : 'success')
-                    ),
+        ->columns([
+            Tables\Columns\TextColumn::make('evaluation.type_evaluation')
+            ->label('Évaluation')
+            ->icon('heroicon-o-clipboard-document-check')
+            ->searchable()
+            ->sortable(),
+
+            Tables\Columns\TextColumn::make('eleve.nom')
+                ->label('Élève')
+                ->icon('heroicon-o-user')
+                ->searchable()
+                ->sortable(),
+
+            Tables\Columns\TextColumn::make('valeur')
+                ->label('Note')
+                ->icon('heroicon-o-chart-bar')
+                ->badge()
+                ->color(fn ($state) =>
+                    $state < 10 ? 'danger' :
+                    ($state < 14 ? 'warning' : 'success')
+                ),
+
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Date')
+                    ->icon('heroicon-o-calendar')
                     ->dateTime()
-                    ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
+                    ->icon('heroicon-o-calendar')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -161,19 +177,25 @@ class NoteResource extends Resource
     {
         return $infolist
             ->schema([
-                Section::make('Détaille sur la note')
-                ->schema([
-                TextEntry::make('evaluation.type_evaluation')
-                    ->label('Note Evaluation'),
-                TextEntry::make('eleve.nom')
-                    ->label('Nom Eleve'),
-                TextEntry::make('valeur')
-                    ->label('Valeur'),
-                ])->columns(3),
-                    
-                
+                Section::make('Détails de la note')
+                    ->icon('heroicon-o-information-circle')
+                    ->schema([
+                        TextEntry::make('evaluation.type_evaluation')
+                            ->label('Type d’évaluation')
+                            ->icon('heroicon-o-clipboard-document-check'),
+
+                        TextEntry::make('eleve.nom')
+                            ->label('Nom de l’élève')
+                            ->icon('heroicon-o-user'),
+
+                        TextEntry::make('valeur')
+                            ->label('Note obtenue')
+                            ->icon('heroicon-o-academic-cap'),
+                    ])
+                    ->columns(3),
             ]);
     }
+
 
     
 

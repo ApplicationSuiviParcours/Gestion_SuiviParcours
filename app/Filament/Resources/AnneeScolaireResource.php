@@ -185,34 +185,43 @@ class AnneeScolaireResource extends Resource
      // Infolist pour la vue detaillée
 
     public static function infolist(Infolist $infolist): Infolist
-    {
-        return $infolist
-            ->schema([
-                Section::make('Informations sur l\'année scolaire')
-                ->icon('heroicon-o-user')
+{
+    return $infolist
+        ->schema([
+            Section::make('Informations sur l\'année scolaire')
+                ->icon('heroicon-o-calendar') 
                 ->schema([
-                TextEntry::make('libelle')
-                    ->label('Libellé de l\'année'),
-                TextEntry::make('date_debut')
-                    ->label('Date de début')
-                    ->date(),
-                TextEntry::make('date_fin')
-                    ->label('Date de fin')
-                    ->date(),
-                ])->columns(3),
-                Section::make('Statut')
+                    TextEntry::make('libelle')
+                        ->label('Libellé de l\'année')
+                        ->icon('heroicon-o-tag'),
+
+                    TextEntry::make('date_debut')
+                        ->label('Date de début')
+                        ->icon('heroicon-o-calendar') 
+                        ->date(),
+
+                    TextEntry::make('date_fin')
+                        ->label('Date de fin')
+                        ->icon('heroicon-o-calendar') 
+                        ->date(),
+                ])
+                ->columns(3),
+
+            Section::make('Statut')
+                ->icon('heroicon-o-check-circle')
                 ->schema([
-                TextEntry::make('actif')
-                    ->label('Année active ?')
-                    ->badge()
-                    ->color(fn (string $state) =>
-                            $state === 'actif' ? 'success' : 'danger'
+                    TextEntry::make('actif')
+                        ->label('Année active ?')
+                        ->icon(fn (bool $state) =>
+                            $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle'
                         )
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non'),
+                        ->badge()
+                        ->color(fn (bool $state) => $state ? 'success' : 'danger')
+                        ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non'),
                 ]),
-                
-            ]);
-    }
+        ]);
+}
+
 
 
     public static function getRelations(): array

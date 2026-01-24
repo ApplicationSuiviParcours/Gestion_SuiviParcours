@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\InscriptionResource\Pages;
-use App\Filament\Resources\InscriptionResource\RelationManagers;
 use App\Models\Inscription;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -11,7 +10,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\Filter;
@@ -21,10 +19,10 @@ use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Section;
 
-
 class InscriptionResource extends Resource
 {
     protected static ?string $model = Inscription::class;
+
     protected static ?string $navigationGroup = 'Scolarité';
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
     protected static ?string $navigationLabel = 'Inscriptions';
@@ -49,102 +47,142 @@ class InscriptionResource extends Resource
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Le nombre d\'inscription';
+        return 'Le nombre d\'inscriptions';
     }
 
-
+    /* =========================
+        FORMULAIRE
+    ========================== */
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\Section::make('Inscription')
+                    ->icon('heroicon-o-clipboard-document-check')
                     ->schema([
                         Forms\Components\Select::make('eleve_id')
+                            ->label('Élève')
                             ->relationship('eleve', 'nom')
                             ->searchable()
-                            ->required(),
+                            ->required()
+                            ->prefixIcon('heroicon-o-user'),
+
                         Forms\Components\Select::make('classe_id')
+                            ->label('Classe')
                             ->relationship('classe', 'nom_classe')
-                            ->required(),
+                            ->required()
+                            ->prefixIcon('heroicon-o-rectangle-group'),
+
                         Forms\Components\Select::make('annee_id')
+                            ->label('Année scolaire')
                             ->relationship('annee', 'libelle')
-                            ->required(),
+                            ->required()
+                            ->prefixIcon('heroicon-o-calendar'),
+
                         Forms\Components\DatePicker::make('date_inscription')
-                            ->required(),
+                            ->label('Date d\'inscription')
+                            ->required()
+                            ->prefixIcon('heroicon-o-clock'),
+
                         Forms\Components\TextInput::make('statut')
-                            ->required(),
-                    ])->columns(2)
+                            ->label('Statut')
+                            ->required()
+                            ->prefixIcon('heroicon-o-check-circle'),
+                    ])->columns(2),
             ]);
     }
 
+    /* =========================
+        TABLE
+    ========================== */
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('eleve.nom')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Élève')
+                    ->sortable()
+                    ->searchable()
+                    ->icon('heroicon-o-user'),
+
                 Tables\Columns\TextColumn::make('classe.nom_classe')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Classe')
+                    ->sortable()
+                    ->icon('heroicon-o-rectangle-group'),
+
                 Tables\Columns\TextColumn::make('annee.libelle')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Année')
+                    ->sortable()
+                    ->icon('heroicon-o-calendar'),
+
                 Tables\Columns\TextColumn::make('date_inscription')
+                    ->label('Date')
                     ->date()
-                    ->sortable(),
+                    ->sortable()
+                    ->icon('heroicon-o-clock'),
+
                 Tables\Columns\TextColumn::make('statut')
-                    ->searchable(),
+                    ->label('Statut')
+                    ->badge()
+                    ->icon('heroicon-o-check-circle'),
+
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Créé le')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->icon('heroicon-o-clock'),
+
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Mis à jour le')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->icon('heroicon-o-clock'),
             ])
-             ->filters([
-                SelectFilter::make('classe_id')->relationship('classe','nom_classe'),
-                SelectFilter::make('annee_id')->relationship('annee','libelle'),
+            ->filters([
+                SelectFilter::make('classe_id')
+                    ->label('Classe')
+                    ->relationship('classe', 'nom_classe'),
+
+                SelectFilter::make('annee_id')
+                    ->label('Année')
+                    ->relationship('annee', 'libelle'),
+
                 Filter::make('created_at')
                     ->form([
-                        DatePicker::make('created_from'),
-                        DatePicker::make('created_until'),
+                        DatePicker::make('created_from')->label('Depuis'),
+                        DatePicker::make('created_until')->label('Jusqu\'à'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when(
-                                $data['created_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
-                            )
-                            ->when(
-                                $data['created_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
-                            );
+                            ->when($data['created_from'] ?? null,
+                                fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
+                            ->when($data['created_until'] ?? null,
+                                fn ($query, $date) => $query->whereDate('created_at', '<=', $date));
                     })
-
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
 
-                        if ($data['from'] ?? null) {
-                            $indicators[] = Indicator::make('Created from ' . Carbon::parse($data['from'])->toFormattedDateString())
-                                ->removeField('from');
+                        if ($data['created_from'] ?? null) {
+                            $indicators[] = Indicator::make(
+                                'Depuis ' . Carbon::parse($data['created_from'])->toFormattedDateString()
+                            )->removeField('created_from');
                         }
 
-                        if ($data['until'] ?? null) {
-                            $indicators[] = Indicator::make('Created until ' . Carbon::parse($data['until'])->toFormattedDateString())
-                                ->removeField('until');
+                        if ($data['created_until'] ?? null) {
+                            $indicators[] = Indicator::make(
+                                'Jusqu\'à ' . Carbon::parse($data['created_until'])->toFormattedDateString()
+                            )->removeField('created_until');
                         }
 
                         return $indicators;
-                    })
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
-                    ->requiresConfirmation(),
+                Tables\Actions\DeleteAction::make()->requiresConfirmation(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -153,41 +191,44 @@ class InscriptionResource extends Resource
             ]);
     }
 
-    // Infolist utilisée pour voir les détails
-
+    /* =========================
+        INFOLIST
+    ========================== */
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
             ->schema([
-                Section::make('Inscription')
-                ->schema([
-                TextEntry::make('eleve.nom')
-                    ->label('Eleve'),
-                TextEntry::make('classe.nom_classe')
-                    ->label('Classe'),
-                TextEntry::make('annee.libelle')
-                    ->label('Annee'),
-                TextEntry::make('date_inscription')
-                    ->label('Date Inscription'),
-                TextEntry::make('statut')
-                    ->badge()
-                    ->color(fn (string $state) =>
-                            $state === 'actif' ? 'success' : 'danger'
-                        )
-                    ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non')
-                    ->label('Telephone'),
-                ])->columns(3),
-                    
-                
+                Section::make('Détails de l\'inscription')
+                    ->icon('heroicon-o-clipboard-document-check')
+                    ->schema([
+                        TextEntry::make('eleve.nom')
+                            ->label('Élève')
+                            ->icon('heroicon-o-user'),
+
+                        TextEntry::make('classe.nom_classe')
+                            ->label('Classe')
+                            ->icon('heroicon-o-rectangle-group'),
+
+                        TextEntry::make('annee.libelle')
+                            ->label('Année scolaire')
+                            ->icon('heroicon-o-calendar'),
+
+                        TextEntry::make('date_inscription')
+                            ->label('Date d\'inscription')
+                            ->date()
+                            ->icon('heroicon-o-clock'),
+
+                        TextEntry::make('statut')
+                            ->label('Statut')
+                            ->badge()
+                            ->icon('heroicon-o-check-circle'),
+                    ])->columns(3),
             ]);
     }
 
-    
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
