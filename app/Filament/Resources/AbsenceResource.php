@@ -46,6 +46,21 @@ class AbsenceResource extends Resource
         return auth()->user()->hasRole(['Administrateur', 'Enseignant', 'Scolarite']);
     }
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::count() > 10 ? 'warning' : 'danger';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Le nombre des élèves en absence ou non';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -55,10 +70,12 @@ class AbsenceResource extends Resource
                 Forms\Components\Select::make('eleve_id')
                     ->relationship('eleve', 'nom')
                     ->label('Élève')
+                    ->prefixIcon('heroicon-o-user')
                     ->required()
                     ->searchable(),
 
             Forms\Components\DatePicker::make('date_absence')
+                ->prefixIcon('heroicon-o-calendar')
                 ->required(),
 
             Forms\Components\RichEditor::make('motif')
@@ -87,15 +104,23 @@ class AbsenceResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('eleve.nom')
+                    ->icon('heroicon-o-user')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('date_absence')
+                    ->icon('heroicon-o-calendar')
                     ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('motif')
+                    ->icon('heroicon-o-book-open')
                     ->searchable(),
                 Tables\Columns\IconColumn::make('justifie')
-                    ->boolean(),
+                    ->color(fn ($state) => $state === 'justifie' ? 'danger' : 'success')
+                    ->icon(fn ($state) =>
+                        $state === 'actif'
+                            ? 'heroicon-o-check-circle'
+                            : 'heroicon-o-x-circle'
+                    ),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -179,6 +204,7 @@ class AbsenceResource extends Resource
         return $infolist
             ->schema([
                 Section::make('Informations sur l\'absence')
+                ->icon('heroicon-o-user')
                 ->schema([
                 TextEntry::make('eleve.nom')
                     ->label('Élève'),
@@ -189,6 +215,7 @@ class AbsenceResource extends Resource
                     ->label('Motif'),
                 ])->columns(3),
                 Section::make('Justification')
+                ->icon('heroicon-o-check-circle')
                 ->schema([
                 TextEntry::make('justifie')
                     ->label('Justifiée')

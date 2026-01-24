@@ -40,6 +40,20 @@ class EleveResource extends Resource
         return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
     }
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::count() > 10 ? 'warning' : 'danger';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Le nombre d\'élève';
+    }
     
 
     public static function form(Form $form): Form
@@ -50,24 +64,30 @@ class EleveResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('matricule')
                             ->label('Matricule')
+                            ->prefixIcon('heroicon-o-identification')
                             ->required()
                             ->unique(ignoreRecord: true),
                         Forms\Components\TextInput::make('nom')
                             ->label('Nom')
+                            ->prefixIcon('heroicon-o-user')
                             ->required(),
                         Forms\Components\TextInput::make('prenom')
                             ->label('Prénom')
+                            ->prefixIcon('heroicon-o-user')
                             ->required(),
                         Forms\Components\Select::make('genre')
                             ->label('Genre')
                             ->options(['M'=>'Masculin','F'=>'Féminin'])
+                            ->prefixIcon('heroicon-o-user-group')
                             ->required(),
                         Forms\Components\DatePicker::make('date_naissance')
                             ->label('Date de naissance')
+                            ->prefixIcon('heroicon-o-calendar')
                             ->required()
                             ->displayFormat('d/m/Y'),
                         Forms\Components\TextInput::make('lieu_naissance')
                             ->label('Lieu de naissance')
+                            ->prefixIcon('heroicon-o-map')
                             ->required(),
                     ])->columns(2),
 
@@ -75,14 +95,17 @@ class EleveResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('adresse')
                             ->label('Adresse')
+                            ->prefixIcon('heroicon-o-map-pin')
                             ->required(),
                         Forms\Components\TextInput::make('telephone')
                             ->label('Téléphone')
                             ->tel()
+                            ->prefixIcon('heroicon-o-phone')
                             ->required(),
                         Forms\Components\TextInput::make('email')
                             ->label('Email')
                             ->email()
+                            ->prefixIcon('heroicon-o-envelope')
                             ->required(),
                     ])->columns(3),
 
@@ -99,6 +122,7 @@ class EleveResource extends Resource
                         Forms\Components\Select::make('statut')
                             ->label('Statut')
                             ->options(['actif'=>'Actif','inactif'=>'Inactif'])
+                            ->prefixIcon('heroicon-o-check-circle')
                             ->default('actif'),
                     ])
             ]);
@@ -109,28 +133,45 @@ class EleveResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('matricule')
+                    ->icon('heroicon-o-identification')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('nom')
+                    ->icon('heroicon-o-user')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('prenom')
+                    ->icon('heroicon-o-user')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('genre')
+                    ->icon('heroicon-o-user-group')
                     ->badge()
                     ->color(fn ($state) => $state === 'M' ? 'info' : 'success'),
                 Tables\Columns\TextColumn::make('date_naissance')
+                    ->icon('heroicon-o-calendar')
                     ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lieu_naissance')
+                    ->icon('heroicon-o-map')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('adresse')
+                    ->icon('heroicon-o-map-pin')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('telephone')
+                    ->icon('heroicon-o-phone')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
+                    ->icon('heroicon-o-envelope')
+                    ->copyable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('photo')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('statut'),
+                Tables\Columns\TextColumn::make('statut')
+                    ->badge()
+                    ->color(fn ($state) => $state === 'actif' ? 'success' : 'danger')
+                    ->icon(fn ($state) =>
+                        $state === 'actif'
+                            ? 'heroicon-o-check-circle'
+                            : 'heroicon-o-x-circle'
+                    ),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -208,6 +249,7 @@ class EleveResource extends Resource
         ->schema([
 
             Section::make('Informations générales')
+                ->icon('heroicon-o-user')
                 ->schema([
                     TextEntry::make('matricule')
                         ->label('Matricule'),
@@ -234,6 +276,7 @@ class EleveResource extends Resource
                 ->columns(2),
 
             Section::make('Coordonnées')
+                ->icon('heroicon-o-phone')
                 ->schema([
                     TextEntry::make('adresse')
                         ->label('Adresse'),

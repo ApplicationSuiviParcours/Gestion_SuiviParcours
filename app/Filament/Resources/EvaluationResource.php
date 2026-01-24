@@ -43,6 +43,21 @@ class EvaluationResource extends Resource
         return auth()->user()->hasRole(['Administrateur', 'Enseignant', 'Scolarite']);
     }
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::count() > 10 ? 'warning' : 'danger';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Le nombre de type d\'évaluation';
+    }
+
     public static function form(Form $form): Form
     {
         return $form

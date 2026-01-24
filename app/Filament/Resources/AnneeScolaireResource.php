@@ -38,6 +38,21 @@ class AnneeScolaireResource extends Resource
         return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
     }
 
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::count() > 10 ? 'warning' : 'danger';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Le nombre d\'année entré';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -46,14 +61,17 @@ class AnneeScolaireResource extends Resource
                     ->schema([
                     Forms\Components\TextInput::make('libelle')
                         ->label('Libellé de l\'année')
+                        ->prefixIcon('heroicon-o-user')
                         ->required()
                         ->maxLength(255),
                     Forms\Components\DatePicker::make('date_debut')
                         ->label('Date de début')
+                        ->prefixIcon('heroicon-o-calendar')
                         ->required()
                         ->displayFormat('d/m/Y'),
                     Forms\Components\DatePicker::make('date_fin')
                         ->label('Date de fin')
+                        ->prefixIcon('heroicon-o-calendar')
                         ->required()
                         ->displayFormat('d/m/Y'),
                     Forms\Components\Toggle::make('actif')
@@ -68,11 +86,14 @@ class AnneeScolaireResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('libelle')
+                    ->icon('heroicon-o-user')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('date_debut')
+                    ->icon('heroicon-o-calendar')
                     ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('date_fin')
+                    ->icon('heroicon-o-calendar')
                     ->date()
                     ->sortable(),
                 Tables\Columns\IconColumn::make('actif')
@@ -168,6 +189,7 @@ class AnneeScolaireResource extends Resource
         return $infolist
             ->schema([
                 Section::make('Informations sur l\'année scolaire')
+                ->icon('heroicon-o-user')
                 ->schema([
                 TextEntry::make('libelle')
                     ->label('Libellé de l\'année'),
