@@ -17,6 +17,12 @@ use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
+use Carbon\Carbon;
+use Filament\Forms\Components\TextInput;
 
 
 class AbsenceResource extends Resource
@@ -100,7 +106,58 @@ class AbsenceResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('eleve_id')
+                ->relationship('eleve', 'nom')
+                ->searchable()
+                ->label('Élève'),
+                Filter::make('date_absence')
+                ->form([
+                    DatePicker::make('date_absence')
+                        ->label('Date d\'absence'),
+                ])
+                ->query(function ($query, array $data) {
+                    return $query->when(
+                        $data['date_absence'],
+                        fn ($q, $date) => $q->whereDate('date_absence', $date)
+                    );
+                }),
+                SelectFilter::make('motif')
+                ->options(
+                    \App\Models\Absence::pluck('motif', 'motif')->toArray()
+                )
+                ->label('Motif Absence'),
+                Filter::make('created_at')
+                    ->form([
+                        DatePicker::make('created_from'),
+                        DatePicker::make('created_until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['from'] ?? null) {
+                            $indicators[] = Indicator::make('Created from ' . Carbon::parse($data['from'])->toFormattedDateString())
+                                ->removeField('from');
+                        }
+
+                        if ($data['until'] ?? null) {
+                            $indicators[] = Indicator::make('Created until ' . Carbon::parse($data['until'])->toFormattedDateString())
+                                ->removeField('until');
+                        }
+
+                        return $indicators;
+                    })
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -135,6 +192,10 @@ class AbsenceResource extends Resource
                 ->schema([
                 TextEntry::make('justifie')
                     ->label('Justifiée')
+                    ->badge()
+                    ->color(fn (string $state) =>
+                            $state === 'justifie' ? 'danger' : 'success'
+                        )
                     ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non'),
                 ]),
             ]);

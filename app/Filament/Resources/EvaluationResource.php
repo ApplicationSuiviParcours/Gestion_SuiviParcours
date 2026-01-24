@@ -13,6 +13,13 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
+use Carbon\Carbon;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Section;
 
 class EvaluationResource extends Resource
 {
@@ -24,7 +31,11 @@ class EvaluationResource extends Resource
 
     protected static ?string $navigationLabel = 'Evaluations';
 
+    protected static ?string $pluralModelLabel = 'Evaluations';
+
     protected static ?int $navigationSort = 8;
+
+    protected static ?string $recordTitleAttribute = 'type_evaluation';
 
      // 🔐 SÉCURITÉ
     public static function canViewAny(): bool
@@ -66,6 +77,8 @@ class EvaluationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('type_evaluation')
+                    ->searchable()
+                    ->sortable()
                     ->badge()
                     ->color(fn ($state) =>
                         $state === 'examen' ? 'danger' :
@@ -73,32 +86,70 @@ class EvaluationResource extends Resource
                     ),
                 Tables\Columns\TextColumn::make('date_evaluation')
                     ->date()
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('classe_id')
+                Tables\Columns\TextColumn::make('classe.nom_classe')
+                    ->numeric()
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('matiere.libelle')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('matiere_id')
+                Tables\Columns\TextColumn::make('annee.libelle')
                     ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('annee_id')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
+                    ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
+                    ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('type')
+                SelectFilter::make('type_evaluation')
                     ->options([
                         'devoir'=>'Devoir',
                         'interrogation'=>'Interrogation',
                         'examen'=>'Examen',
-            ])
+            ]),
+
+            Filter::make('created_at')
+                    ->form([
+                        DatePicker::make('created_from'),
+                        DatePicker::make('created_until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['from'] ?? null) {
+                            $indicators[] = Indicator::make('Created from ' . Carbon::parse($data['from'])->toFormattedDateString())
+                                ->removeField('from');
+                        }
+
+                        if ($data['until'] ?? null) {
+                            $indicators[] = Indicator::make('Created until ' . Carbon::parse($data['until'])->toFormattedDateString())
+                                ->removeField('until');
+                        }
+
+                        return $indicators;
+                    })
                 
             ])
             ->actions([
@@ -111,6 +162,32 @@ class EvaluationResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ]);
+    }
+
+    // Infolist pour la vue detaillée
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Detail sur l\'évaluation')
+                ->schema([
+                TextEntry::make('type_evaluation')
+                    ->label('Type Evaluation'),
+                TextEntry::make('date_evaluation')
+                    ->label('Date Evaluation')
+                    ->date(),
+                TextEntry::make('classe.nom_classe')
+                    ->label('Nom de la classe'),
+                TextEntry::make('matiere.libelle')
+                    ->label('Libelle de la matiere'),
+                    TextEntry::make('annee.libelle')
+                    ->label('Libelle Anneé'),
+                ])->columns(3),
+               
+                
+                
             ]);
     }
 

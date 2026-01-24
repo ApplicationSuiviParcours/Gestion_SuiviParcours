@@ -12,11 +12,14 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\Filter;
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Section;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
+use Carbon\Carbon;
 
 class AnneeScolaireResource extends Resource
 {
@@ -24,6 +27,7 @@ class AnneeScolaireResource extends Resource
     protected static ?string $navigationGroup = 'Scolarité';
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?int $navigationSort = 1;
+    protected static ?string $pluralModelLabel = 'Annee Scolaire';
     protected static ?string $recordTitleAttribute = 'actif';
 
 
@@ -83,8 +87,66 @@ class AnneeScolaireResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Filter::make('actif')
-                    ->query(fn ($q) => $q->where('actif', true)),
+                SelectFilter::make('libelle')
+                ->options(
+                    \App\Models\AnneeScolaire::pluck('libelle', 'libelle')->toArray()
+                )
+                ->label('Année scolaire'),
+                Filter::make('date_debut')
+                    ->form([
+                        DatePicker::make('date_debut')
+                            ->label('Date de début'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query->when(
+                            $data['date_debut'],
+                            fn ($q, $date) => $q->whereDate('date_debut', $date)
+                        );
+                    }),
+                Filter::make('date_fin')
+                    ->form([
+                        DatePicker::make('date_fin')
+                            ->label('Date de fin'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query->when(
+                            $data['date_fin'],
+                            fn ($q, $date) => $q->whereDate('date_fin', $date)
+                        );
+                    }),
+
+                Filter::make('created_at')
+                    ->form([
+                        DatePicker::make('created_from'),
+                        DatePicker::make('created_until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['from'] ?? null) {
+                            $indicators[] = Indicator::make('Created from ' . Carbon::parse($data['from'])->toFormattedDateString())
+                                ->removeField('from');
+                        }
+
+                        if ($data['until'] ?? null) {
+                            $indicators[] = Indicator::make('Created until ' . Carbon::parse($data['until'])->toFormattedDateString())
+                                ->removeField('until');
+                        }
+
+                        return $indicators;
+                    })
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

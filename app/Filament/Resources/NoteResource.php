@@ -12,6 +12,14 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
+use Carbon\Carbon;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Section;
 
 class NoteResource extends Resource
 {
@@ -23,7 +31,11 @@ class NoteResource extends Resource
 
     protected static ?string $navigationLabel = 'Notes';
 
+    protected static ?string $pluralModelLabel = 'Notes des élèves';
+
     protected static ?int $navigationSort = 9;
+
+    protected static ?string $recordTitleAttribute = 'type_evaluation';
 
     // 🔐 SÉCURITÉ
     public static function canViewAny(): bool
@@ -38,7 +50,7 @@ class NoteResource extends Resource
                 Forms\Components\Section::make('Saisir la note de l\'élève')
                     ->schema([
                         Forms\Components\Select::make('evaluation_id')
-                            ->relationship('evaluation','id')
+                            ->relationship('evaluation','type_evaluation')
                             ->required(),
                         Forms\Components\Select::make('eleve_id')
                             ->relationship('eleve','nom')->required(),
@@ -53,13 +65,16 @@ class NoteResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('evaluation.id')
+                Tables\Columns\TextColumn::make('evaluation.type_evaluation')
                     ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('eleve.nom')
                     ->numeric()
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('valeur')
+                    ->searchable()
                     ->badge()
                     ->color(fn ($state) =>
                         $state < 10 ? 'danger' :
@@ -75,8 +90,45 @@ class NoteResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('evaluation_id')
+                    ->relationship('evaluation', 'type_evaluation')
+                    ->searchable(),
+
+            Filter::make('created_at')
+                    ->form([
+                        DatePicker::make('created_from'),
+                        DatePicker::make('created_until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['from'] ?? null) {
+                            $indicators[] = Indicator::make('Created from ' . Carbon::parse($data['from'])->toFormattedDateString())
+                                ->removeField('from');
+                        }
+
+                        if ($data['until'] ?? null) {
+                            $indicators[] = Indicator::make('Created until ' . Carbon::parse($data['until'])->toFormattedDateString())
+                                ->removeField('until');
+                        }
+
+                        return $indicators;
+                    })
+                
             ])
+   
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
@@ -87,6 +139,24 @@ class NoteResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Détaille sur la note')
+                ->schema([
+                TextEntry::make('evaluation.type_evaluation')
+                    ->label('Note Evaluation'),
+                TextEntry::make('eleve.nom')
+                    ->label('Nom Eleve'),
+                TextEntry::make('valeur')
+                    ->label('Valeur'),
+                ])->columns(3),
+                    
+                
             ]);
     }
 

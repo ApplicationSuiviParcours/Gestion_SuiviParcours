@@ -13,6 +13,14 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
+use Carbon\Carbon;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Section;
+
 
 class InscriptionResource extends Resource
 {
@@ -20,6 +28,7 @@ class InscriptionResource extends Resource
     protected static ?string $navigationGroup = 'Scolarité';
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
     protected static ?string $navigationLabel = 'Inscriptions';
+    protected static ?string $pluralModelLabel = 'Inscriptions';
     protected static ?int $navigationSort = 7;
 
     // 🔐 SÉCURITÉ
@@ -83,6 +92,38 @@ class InscriptionResource extends Resource
              ->filters([
                 SelectFilter::make('classe_id')->relationship('classe','nom_classe'),
                 SelectFilter::make('annee_id')->relationship('annee','libelle'),
+                Filter::make('created_at')
+                    ->form([
+                        DatePicker::make('created_from'),
+                        DatePicker::make('created_until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['from'] ?? null) {
+                            $indicators[] = Indicator::make('Created from ' . Carbon::parse($data['from'])->toFormattedDateString())
+                                ->removeField('from');
+                        }
+
+                        if ($data['until'] ?? null) {
+                            $indicators[] = Indicator::make('Created until ' . Carbon::parse($data['until'])->toFormattedDateString())
+                                ->removeField('until');
+                        }
+
+                        return $indicators;
+                    })
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -94,6 +135,35 @@ class InscriptionResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ]);
+    }
+
+    // Infolist utilisée pour voir les détails
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Inscription')
+                ->schema([
+                TextEntry::make('eleve.nom')
+                    ->label('Eleve'),
+                TextEntry::make('classe.nom_classe')
+                    ->label('Classe'),
+                TextEntry::make('annee.libelle')
+                    ->label('Annee'),
+                TextEntry::make('date_inscription')
+                    ->label('Date Inscription'),
+                TextEntry::make('statut')
+                    ->badge()
+                    ->color(fn (string $state) =>
+                            $state === 'actif' ? 'success' : 'danger'
+                        )
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non')
+                    ->label('Telephone'),
+                ])->columns(3),
+                    
+                
             ]);
     }
 
