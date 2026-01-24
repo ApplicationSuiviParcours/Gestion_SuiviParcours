@@ -13,6 +13,10 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\ImageEntry;
 
 class EleveResource extends Resource
 {
@@ -147,6 +151,77 @@ class EleveResource extends Resource
                 ]),
             ]);
     }
+
+
+     // Infolist pour la vue detaillée
+
+    public static function infolist(Infolist $infolist): Infolist
+{
+    return $infolist
+        ->schema([
+
+            Section::make('Informations générales')
+                ->schema([
+                    TextEntry::make('matricule')
+                        ->label('Matricule'),
+
+                    TextEntry::make('nom')
+                        ->label('Nom'),
+
+                    TextEntry::make('prenom')
+                        ->label('Prénom'),
+
+                    TextEntry::make('genre')
+                        ->label('Genre')
+                        ->formatStateUsing(
+                            fn (string $state) => $state === 'M' ? 'Masculin' : 'Féminin'
+                        ),
+
+                    TextEntry::make('date_naissance')
+                        ->label('Date de naissance')
+                        ->date('d/m/Y'),
+
+                    TextEntry::make('lieu_naissance')
+                        ->label('Lieu de naissance'),
+                ])
+                ->columns(2),
+
+            Section::make('Coordonnées')
+                ->schema([
+                    TextEntry::make('adresse')
+                        ->label('Adresse'),
+
+                    TextEntry::make('telephone')
+                        ->label('Téléphone'),
+
+                    TextEntry::make('email')
+                        ->label('Email'),
+                ])
+                ->columns(3),
+
+            Section::make('Photo de l\'élève')
+                ->schema([
+                    ImageEntry::make('photo')
+                        ->label('')
+                        ->disk('public')
+                        ->height(150)
+                        ->circular(),
+                ]),
+
+            Section::make('Statut')
+                ->schema([
+                    TextEntry::make('statut')
+                        ->label('Statut')
+                        ->badge()
+                        ->color(fn (string $state) =>
+                            $state === 'actif' ? 'success' : 'danger'
+                        )
+                        ->formatStateUsing(fn (string $state) =>
+                            ucfirst($state)
+                        ),
+                ]),
+        ]);
+}
 
    
     public static function getRelations(): array

@@ -13,6 +13,11 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\RichEditor;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Section;
+use Filament\Tables\Columns\IconColumn;
+
 
 class AbsenceResource extends Resource
 {
@@ -21,6 +26,10 @@ class AbsenceResource extends Resource
     protected static ?string $navigationGroup = 'Scolarité';
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+
+    protected static ?string $navigationLabel = 'Absences';
+
+    protected static ?string $pluralModelLabel = 'Absences';
 
     protected static ?int $navigationSort = 10;
 
@@ -36,34 +45,34 @@ class AbsenceResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('Informations sur l\'absence')
-    ->schema([
-        Forms\Components\Select::make('eleve_id')
-            ->relationship('eleve', 'nom')
-            ->label('Élève')
-            ->required()
-            ->searchable(),
+            ->schema([
+                Forms\Components\Select::make('eleve_id')
+                    ->relationship('eleve', 'nom')
+                    ->label('Élève')
+                    ->required()
+                    ->searchable(),
 
-        Forms\Components\DatePicker::make('date_absence')
-            ->required(),
+            Forms\Components\DatePicker::make('date_absence')
+                ->required(),
 
-        Forms\Components\RichEditor::make('motif')
-            ->placeholder('Exemple : Maladie, Rendez-vous médical, Retard…')
-            ->required()
-            ->columnSpan('full')
-            ->toolbarButtons([
-                'bold',        
-                'italic',      
-                'underline',   
-                'bulletList',  
-                'numberList',  
-                'link',        
-                'redo',        
-                'undo',        
-            ]),
+            Forms\Components\RichEditor::make('motif')
+                ->placeholder('Exemple : Maladie, Rendez-vous médical, Retard…')
+                ->required()
+                ->columnSpan('full')
+                ->toolbarButtons([
+                    'bold',        
+                    'italic',      
+                    'underline',   
+                    'bulletList',  
+                    'numberList',  
+                    'link',        
+                    'redo',        
+                    'undo',        
+                ]),
 
-        Forms\Components\Toggle::make('justifie')
-            ->required(),
-    ])
+                Forms\Components\Toggle::make('justifie')
+                    ->required(),
+            ])
             ])->columns(3);
     }
 
@@ -102,6 +111,31 @@ class AbsenceResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    // Infolist pour la vue detaillée
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Informations sur l\'absence')
+                ->schema([
+                TextEntry::make('eleve.nom')
+                    ->label('Élève'),
+                TextEntry::make('date_absence')
+                    ->label('Date de l\'absence')
+                    ->date(),
+                TextEntry::make('motif')
+                    ->label('Motif'),
+                ])->columns(3),
+                Section::make('Justification')
+                ->schema([
+                TextEntry::make('justifie')
+                    ->label('Justifiée')
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non'),
                 ]),
             ]);
     }

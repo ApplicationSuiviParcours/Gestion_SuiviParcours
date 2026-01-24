@@ -12,6 +12,9 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 
 class EnseignantResource extends Resource
 {
@@ -91,6 +94,29 @@ class EnseignantResource extends Resource
                 ]),
             ]);
     }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Informations personnelle')
+                ->schema([
+                TextEntry::make('nom')
+                    ->label('Nom Enseignant'),
+                TextEntry::make('prenom')
+                    ->label('Prenom Ensegnant'),
+                TextEntry::make('specialite')
+                    ->label('Spécialité'),
+                TextEntry::make('telephone')
+                    ->label('Telephone'),
+                TextEntry::make('email')
+                    ->label('Email'),
+                ])->columns(4),
+                    
+                
+            ]);
+    }
+
 
     public static function getRelations(): array
     {

@@ -13,6 +13,9 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 
 
 class ClasseResource extends Resource
@@ -126,6 +129,28 @@ class ClasseResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ]);
+    }
+
+     // Infolist pour la vue detaillée
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Informations sur la classe')
+                ->schema([
+                TextEntry::make('nom_classe')
+                    ->label('Nom de la classe'),
+                TextEntry::make('niveau')
+                    ->label('Niveau'),
+                TextEntry::make('filiere')
+                    ->label('Filière'),
+                TextEntry::make('effectif_max')
+                    ->label('Effectif maximum'),
+                ])->columns(4),
+                    
+                
             ]);
     }
 

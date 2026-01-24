@@ -14,6 +14,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Section;
 
 class AnneeScolaireResource extends Resource
 {
@@ -36,7 +39,7 @@ class AnneeScolaireResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('Informations sur l\'année scolaire')
-    ->schema([
+                    ->schema([
                     Forms\Components\TextInput::make('libelle')
                         ->label('Libellé de l\'année')
                         ->required()
@@ -93,6 +96,37 @@ class AnneeScolaireResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ]);
+    }
+
+     // Infolist pour la vue detaillée
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Informations sur l\'année scolaire')
+                ->schema([
+                TextEntry::make('libelle')
+                    ->label('Libellé de l\'année'),
+                TextEntry::make('date_debut')
+                    ->label('Date de début')
+                    ->date(),
+                TextEntry::make('date_fin')
+                    ->label('Date de fin')
+                    ->date(),
+                ])->columns(3),
+                Section::make('Statut')
+                ->schema([
+                TextEntry::make('actif')
+                    ->label('Année active ?')
+                    ->badge()
+                    ->color(fn (string $state) =>
+                            $state === 'actif' ? 'success' : 'danger'
+                        )
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non'),
+                ]),
+                
             ]);
     }
 
