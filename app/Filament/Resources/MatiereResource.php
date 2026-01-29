@@ -33,7 +33,7 @@ class MatiereResource extends Resource
     // 🔐 SÉCURITÉ
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasRole(['super_admin', 'Administrateur']);
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
     }
 
     public static function getNavigationBadge(): ?string

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Classe;
 use App\Models\EnseignantMatiereClasse;
+use App\Models\EmploiDuTemps;
 
 class Matiere extends Model
 {
@@ -32,5 +33,11 @@ class Matiere extends Model
     {
         return $this->hasMany(EnseignantMatiereClasse::class);
     }
+
+    public function emploisDuTemps(): HasMany 
+    {
+        return $this->hasMany(EmploiDuTemps::class);
+    }
+
 
 }

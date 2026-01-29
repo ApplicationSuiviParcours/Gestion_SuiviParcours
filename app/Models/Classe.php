@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use App\Models\Inscription;
 use App\Models\Eleve;
 use App\Models\EnseignantMatiereClasse;
+use App\Models\EmploiDuTemps;
+
 
 class Classe extends Model
 {
@@ -48,5 +50,11 @@ class Classe extends Model
     {
         return $this->hasMany(EnseignantMatiereClasse::class);
     }
+
+    public function emploisDuTemps(): HasMany 
+    {
+        return $this->hasMany(EmploiDuTemps::class);
+    }
+
 
 }

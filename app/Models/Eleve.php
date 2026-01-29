@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\ParentEleve;
 use App\Models\Inscription;
 use App\Models\Note;
 use App\Models\Absence;
+use App\Models\Bulletin;
 
 class Eleve extends Model
 {
@@ -65,4 +67,10 @@ class Eleve extends Model
     {
         return $this->hasMany(Absence::class, 'eleve_id', 'id');
     }
+
+    public function bulletins(): HasMany
+    {
+        return $this->hasMany(Bulletin::class);
+    }
+
 }
