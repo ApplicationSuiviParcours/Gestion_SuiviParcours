@@ -15,7 +15,7 @@ class CreateClasse extends CreateRecord
     {
         return Notification::make()
             ->success()
-            ->title('Nouvelle Classe créer')
-            ->body('Classe a été créer avec succès');
+            ->title('Nouvelle Classe créee')
+            ->body('Classe a été créee avec succès');
     }
 }

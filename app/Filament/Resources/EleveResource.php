@@ -30,7 +30,7 @@ class EleveResource extends Resource
 
     protected static ?string $navigationLabel = 'Elèves';
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
     protected static ?string $pluralModelLabel = 'Elèves';
     protected static ?string $recordTitleAttribute = 'nom';
 
@@ -39,6 +39,22 @@ class EleveResource extends Resource
     {
         return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
     }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
 
     public static function getNavigationBadge(): ?string
     {

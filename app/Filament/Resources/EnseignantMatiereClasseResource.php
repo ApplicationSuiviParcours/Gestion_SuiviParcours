@@ -22,7 +22,7 @@ class EnseignantMatiereClasseResource extends Resource
 
     protected static ?string $navigationGroup = 'Scolarité';
 
-    protected static ?int $navigationSort = 11;
+    protected static ?int $navigationSort = 13;
 
     protected static ?string $label = 'Affectation pédagogique';
     protected static ?string $pluralLabel = 'Affectations pédagogiques';
@@ -33,6 +33,22 @@ class EnseignantMatiereClasseResource extends Resource
         return auth()->check() &&
             auth()->user()->hasAnyRole(['Administrateur', 'Scolarite']);
     }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
 
     public static function getNavigationBadge(): ?string
     {

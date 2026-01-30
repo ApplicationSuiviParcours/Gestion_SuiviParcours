@@ -23,7 +23,7 @@ class EditAnneeScolaire extends EditRecord
     {
         return Notification::make()
             ->success()
-            ->title('Année Scolaire modifier')
+            ->title('Année Scolaire modifiée')
             ->body('L\'année scolaire a été modifier avec succès');
     }
     

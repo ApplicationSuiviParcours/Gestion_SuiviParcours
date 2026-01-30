@@ -15,7 +15,7 @@ class CreateMatiere extends CreateRecord
     {
         return Notification::make()
             ->success()
-            ->title('Matiere créer')
-            ->body('La matière a été créer avec succès.');
+            ->title('Matiere créée')
+            ->body('La matière a été créée avec succès.');
     }
 }

@@ -35,6 +35,22 @@ class InscriptionResource extends Resource
         return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
     }
 
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::count();

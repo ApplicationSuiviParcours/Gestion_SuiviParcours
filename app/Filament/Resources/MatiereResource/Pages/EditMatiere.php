@@ -22,7 +22,7 @@ class EditMatiere extends EditRecord
     {
         return Notification::make()
             ->success()
-            ->title('Matiere modfier')
-            ->body('La matière a été créer avec succès.');
+            ->title('Matiere modfiée')
+            ->body('La matière a été modifiée avec succès.');
     }
 }

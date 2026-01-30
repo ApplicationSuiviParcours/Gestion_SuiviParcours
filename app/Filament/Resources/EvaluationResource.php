@@ -27,7 +27,7 @@ class EvaluationResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
     protected static ?string $navigationLabel = 'Évaluations';
     protected static ?string $pluralModelLabel = 'Évaluations';
-    protected static ?int $navigationSort = 8;
+    protected static ?int $navigationSort = 9;
     protected static ?string $recordTitleAttribute = 'type_evaluation';
 
     // 🔐 Sécurité
@@ -35,6 +35,22 @@ class EvaluationResource extends Resource
     {
         return auth()->user()->hasRole(['Administrateur', 'Enseignant', 'Scolarite']);
     }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
 
     public static function getNavigationBadge(): ?string
     {

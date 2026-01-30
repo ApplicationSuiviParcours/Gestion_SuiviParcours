@@ -14,7 +14,7 @@ class CreateParentEleve extends CreateRecord
     {
         return Notification::make()
             ->success()
-            ->title('ParentEleve créer')
-            ->body('ParentEleve  a été créer avec succès.');
+            ->title('ParentEleve créée')
+            ->body('ParentEleve  a été créée avec succès.');
     }
 }

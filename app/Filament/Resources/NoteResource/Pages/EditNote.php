@@ -22,7 +22,7 @@ class EditNote extends EditRecord
     {
         return Notification::make()
             ->success()
-            ->title('Note modifier')
-            ->body('La note a été modifier avec succès.');
+            ->title('Note modifiée')
+            ->body('La note a été modifiée avec succès.');
     }
 }

@@ -15,7 +15,7 @@ class CreateInscription extends CreateRecord
     {
         return Notification::make()
             ->success()
-            ->title('Inscription enregistré')
-            ->body('L\'inscription enregistré avec succès.');
+            ->title('Inscription enregistrée')
+            ->body('L\'inscription enregistrée avec succès.');
     }
 }

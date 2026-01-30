@@ -29,13 +29,29 @@ class ParentEleveResource extends Resource
     protected static ?string $pluralModelLabel = 'Parents';
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $recordTitleAttribute = 'nom';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 12;
 
     // 🔐 SÉCURITÉ
     public static function canViewAny(): bool
     {
         return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
     }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
 
     public static function getNavigationBadge(): ?string
     {

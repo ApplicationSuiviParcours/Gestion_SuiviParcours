@@ -22,7 +22,7 @@ class EditInscription extends EditRecord
     {
         return Notification::make()
             ->success()
-            ->title('Inscription modifier')
-            ->body('L\'inscription modifier avec succès.');
+            ->title('Inscription modifiée')
+            ->body('L\'inscription modifiée avec succès.');
     }
 }

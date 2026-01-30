@@ -15,7 +15,7 @@ class CreateEvaluation extends CreateRecord
     {
         return Notification::make()
             ->success()
-            ->title('Evaluation enregistré')
-            ->body('L\'évaluation enregistré avec succès.');
+            ->title('Evaluation enregistrée')
+            ->body('L\'évaluation enregistrée avec succès.');
     }
 }

@@ -26,7 +26,7 @@ class AnneeScolaireResource extends Resource
     protected static ?string $model = AnneeScolaire::class;
     protected static ?string $navigationGroup = 'Scolarité';
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
     protected static ?string $pluralModelLabel = 'Annee Scolaire';
     protected static ?string $recordTitleAttribute = 'actif';
 
@@ -37,6 +37,22 @@ class AnneeScolaireResource extends Resource
     {
         return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
     }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
 
     public static function getNavigationBadge(): ?string
     {

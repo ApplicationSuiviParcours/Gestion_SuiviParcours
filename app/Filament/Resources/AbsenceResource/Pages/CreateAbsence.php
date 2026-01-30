@@ -15,7 +15,7 @@ class CreateAbsence extends CreateRecord
     {
         return Notification::make()
             ->success()
-            ->title('Absence créer')
-            ->body('Absence a été créer avec succès');
+            ->title('Absence créée')
+            ->body('L’absence a été créée avec succès.');
     }
 }

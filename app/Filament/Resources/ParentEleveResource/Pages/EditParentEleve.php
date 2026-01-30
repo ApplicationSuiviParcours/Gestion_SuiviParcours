@@ -22,7 +22,7 @@ class EditParentEleve extends EditRecord
     {
         return Notification::make()
             ->success()
-            ->title('ParentEleve modifier')
-            ->body('Le parenteleve a été créer avec succès.');
+            ->title('ParentEleve modifiée')
+            ->body('Le parenteleve a été modifiée avec succès.');
     }
 }

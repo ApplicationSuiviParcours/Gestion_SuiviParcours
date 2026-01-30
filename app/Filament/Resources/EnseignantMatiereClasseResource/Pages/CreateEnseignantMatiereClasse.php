@@ -15,7 +15,7 @@ class CreateEnseignantMatiereClasse extends CreateRecord
     {
         return Notification::make()
             ->success()
-            ->title('Elements crée ')
-            ->body('Les Eléments  créer avec succès.');
+            ->title('Elements créée ')
+            ->body('Les Eléments  créée avec succès.');
     }
 }

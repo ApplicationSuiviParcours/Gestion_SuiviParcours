@@ -22,7 +22,7 @@ class EditEleve extends EditRecord
     {
         return Notification::make()
             ->success()
-            ->title('Eleve modifier')
-            ->body('Eleve a été modifier avec succès');
+            ->title('Eleve modifiée')
+            ->body('Eleve a été modifiée avec succès');
     }
 }

@@ -15,7 +15,7 @@ class CreateNote extends CreateRecord
     {
         return Notification::make()
             ->success()
-            ->title('Note créer')
-            ->body('La note a été créer avec succès.');
+            ->title('Note créée')
+            ->body('La note a été créée avec succès.');
     }
 }

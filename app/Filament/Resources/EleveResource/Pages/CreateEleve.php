@@ -15,8 +15,8 @@ class CreateEleve extends CreateRecord
 {
     return Notification::make()
         ->success()
-        ->title('Nouvelle Eleve créer')
-        ->body('Nouvelle Eleve à été créer avec succès.');
+        ->title('Nouvelle Eleve créée')
+        ->body('Nouvelle Eleve à été créée avec succès.');
 }
     
 }

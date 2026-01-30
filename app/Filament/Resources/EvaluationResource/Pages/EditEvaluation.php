@@ -22,7 +22,7 @@ class EditEvaluation extends EditRecord
     {
         return Notification::make()
             ->success()
-            ->title('Evaluation modifier')
-            ->body('Evaluation modifier avec succès.');
+            ->title('Evaluation modifiée')
+            ->body('Evaluation modifiée avec succès.');
     }
 }

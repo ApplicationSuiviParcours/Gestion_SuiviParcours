@@ -24,7 +24,7 @@ class ClasseResource extends Resource
     protected static ?string $model = Classe::class;
     protected static ?string $navigationGroup = 'Scolarité';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-group';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
     protected static ?string $pluralModelLabel = 'Classes';
     protected static ?string $navigationLabel = 'Classes';
     protected static ?string $recordTitleAttribute = 'nom_classe';
@@ -34,6 +34,22 @@ class ClasseResource extends Resource
     {
         return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
     }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
+    }
+
 
     public static function getNavigationBadge(): ?string
     {

@@ -18,11 +18,11 @@ class EditAbsence extends EditRecord
         ];
     }
 
-    protected function getCreatedNotification(): ?Notification
+    protected function getSavedNotification(): ?Notification
     {
         return Notification::make()
             ->success()
-            ->title('Absence modifier')
-            ->body('Absence a été modifier avec succès');
+            ->title('Absence modifiée')
+            ->body('L’absence a été modifiée avec succès.');
     }
 }

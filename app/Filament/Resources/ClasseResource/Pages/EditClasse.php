@@ -22,7 +22,7 @@ class EditClasse extends EditRecord
     {
         return Notification::make()
             ->success()
-            ->title('Classe modifier')
-            ->body('Classe a été modifier avec succès');
+            ->title('Classe modifiée')
+            ->body('Classe a été modifiée avec succès');
     }
 }
