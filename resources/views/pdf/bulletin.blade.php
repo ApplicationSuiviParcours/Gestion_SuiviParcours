@@ -199,7 +199,7 @@
             flex: 1;
             background-color: #E8F8E8;
             border: 1px solid #ccc;
-            padding: 15px;
+            padding: 12px;
             border-radius: 5px;
             text-align: center;
             display: flex;
@@ -208,13 +208,13 @@
         }
 
         .moyenne-box h3 {
-            font-size: 10pt;
+            font-size: 24px;
             margin-bottom: 10px;
             color: #333;
         }
 
         .moyenne-box .moyenne {
-            font-size: 24pt;
+            font-size: 22px;
             font-weight: bold;
             color: #008000;
         }
@@ -316,7 +316,7 @@
         {{-- Titre du bulletin --}}
         <div class="bulletin-title">
             <h2>BULLETIN DE NOTES</h2>
-            <div class="periode">{{ $bulletin->periode }}</div>
+            <div class="periode">Du {{ $bulletin->periode }}</div>
         </div>
 
         {{-- Informations de l'élève --}}
@@ -458,8 +458,8 @@
         </div>
 
         {{-- Footer avec signatures et QR Code --}}
-        <div class="footer-section">
-            {{-- QR Code --}}
+        {{-- <div class="footer-section">
+            
             <div class="qr-section">
                 <h4>QR Code de Vérification</h4>
                 {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(120)
@@ -478,13 +478,8 @@
                     ])) 
                 !!}
                 <div class="qr-info">Scanner pour vérifier<br>ID: {{ $bulletin->id }}</div>
-            </div>
+            </div> --}}
 
-            {{-- Signature Professeur --}}
-            <div class="signature-section">
-                <h4>Le Professeur Principal</h4>
-                <div class="signature-line"></div>
-            </div>
 
             {{-- Signature Directeur --}}
             <div class="signature-section">
@@ -495,7 +490,7 @@
 
         {{-- Footer document --}}
         <div class="document-footer">
-            Document généré le {{ now()->locale('fr')->isoFormat('dddd D MMMM YYYY [à] HH:mm') }}
+            Bulletin généré le {{ now()->locale('fr')->isoFormat('dddd D MMMM YYYY [à] HH:mm') }}
         </div>
     </div>
 </body>
