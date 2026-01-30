@@ -13,6 +13,9 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Section;
+use Filament\Tables\Actions\Action;
+use App\Services\BulletinService;
+use Filament\Notifications\Notification;
 
 class BulletinResource extends Resource
 {
@@ -24,7 +27,6 @@ class BulletinResource extends Resource
     protected static ?int $navigationSort = 8;
     protected static ?string $recordTitleAttribute = 'id';
 
-    // 🔐 GESTION DES RÔLES
     public static function canViewAny(): bool
     {
         return auth()->user()->hasRole(['Administrateur', 'Enseignant', 'Scolarite']);
@@ -37,6 +39,8 @@ class BulletinResource extends Resource
 
     public static function canEdit($record): bool
     {
+        // Bloque modification après génération
+        if ($record->moyenne !== null) return false;
         return auth()->user()->hasRole(['Administrateur', 'Scolarite']);
     }
 
@@ -52,8 +56,12 @@ class BulletinResource extends Resource
 
     public static function getNavigationBadgeColor(): ?string
     {
-        $count = static::getModel()::count();
-        return $count > 10 ? 'warning' : 'success';
+        return static::getModel()::count() > 10 ? 'warning' : 'danger';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Le nombre de bulletin';
     }
 
     public static function form(Form $form): Form
@@ -105,7 +113,6 @@ class BulletinResource extends Resource
                             ->label('Rang')
                             ->numeric()
                             ->required(false),
-                            // ->prefixIcon('heroicon-o-clipboard-check'),
 
                         Forms\Components\RichEditor::make('appreciation')
                             ->label('Appréciation')
@@ -120,55 +127,48 @@ class BulletinResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('eleve.nom')
-                    ->label('Élève')
-                    ->sortable()
-                    ->searchable()
-                    ->icon('heroicon-o-user'),
-
-                Tables\Columns\TextColumn::make('classe.nom_classe')
-                    ->label('Classe')
-                    ->sortable()
-                    ->searchable()
-                    ->icon('heroicon-o-academic-cap'),
-
-                Tables\Columns\TextColumn::make('annee.libelle')
-                    ->label('Année scolaire')
-                    ->sortable()
-                    ->icon('heroicon-o-calendar'),
-                Tables\Columns\TextColumn::make('periode')
-                    ->label('Periode')
-                    ->badge()
-                    ->searchable()
-                    ->icon('heroicon-o-academic-cap'),
-
-                Tables\Columns\TextColumn::make('moyenne')
-                    ->label('Moyenne générale')
-                    ->sortable()
-                    ->icon('heroicon-o-chart-bar'),
-
-                Tables\Columns\TextColumn::make('rang')
-                    ->label('Rang')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Créé le')
-                    ->dateTime()
-                    ->toggleable()
-                    ->icon('heroicon-o-calendar'),
-
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Modifié le')
-                    ->dateTime()
-                    ->toggleable()
-                    ->icon('heroicon-o-pencil'),
+                Tables\Columns\TextColumn::make('eleve.nom')->label('Élève')->sortable()->searchable()->icon('heroicon-o-user'),
+                Tables\Columns\TextColumn::make('classe.nom_classe')->label('Classe')->sortable()->searchable()->icon('heroicon-o-academic-cap'),
+                Tables\Columns\TextColumn::make('annee.libelle')->label('Année scolaire')->sortable()->icon('heroicon-o-calendar'),
+                Tables\Columns\TextColumn::make('periode')->label('Periode')->badge()->searchable()->icon('heroicon-o-academic-cap'),
+                Tables\Columns\TextColumn::make('moyenne')->label('Moyenne générale')->sortable()->icon('heroicon-o-chart-bar'),
+                Tables\Columns\TextColumn::make('rang')->label('Rang')->sortable(),
+                Tables\Columns\TextColumn::make('created_at')->label('Créé le')->dateTime()->toggleable()->icon('heroicon-o-calendar'),
+                Tables\Columns\TextColumn::make('updated_at')->label('Modifié le')->dateTime()->toggleable()->icon('heroicon-o-pencil'),
             ])
             ->filters([
-                SelectFilter::make('eleve')->relationship('eleve','nom'),
                 SelectFilter::make('classe')->relationship('classe','nom_classe'),
                 SelectFilter::make('annee')->relationship('annee','libelle'),
+                SelectFilter::make('periode')->options([
+                    'Trimestre 1' => 'Trimestre 1',
+                    'Trimestre 2' => 'Trimestre 2',
+                    'Trimestre 3' => 'Trimestre 3',
+                ])
             ])
             ->actions([
+                // 1️⃣ Bouton pour générer tous les bulletins
+                Action::make('generer_bulletins')
+                    ->label('Générer tous les bulletins')
+                    ->icon('heroicon-o-document-text')
+                    ->color('primary')
+                    ->action(function () {
+                        $service = app(BulletinService::class);
+                        $service->genererBulletins();
+
+                        Notification::make()
+                            ->success()
+                            ->title('Succès')
+                            ->body('Tous les bulletins ont été générés avec succès !')
+                            ->send();
+                    }),
+
+                // 2️⃣ Bouton pour télécharger le PDF d’un bulletin sélectionné
+                Action::make('pdf')
+                    ->label('Télécharger PDF')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->url(fn ($record) => route('bulletin.pdf', $record))
+                    ->openUrlInNewTab(),
+
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()->requiresConfirmation(),
@@ -180,19 +180,17 @@ class BulletinResource extends Resource
 
     public static function infolist(Infolist $infolist): Infolist
     {
-        return $infolist
-            ->schema([
-                Section::make('Détails du Bulletin')
-                    ->schema([
-                        TextEntry::make('eleve.nom')->label('Élève')->icon('heroicon-o-user'),
-                        TextEntry::make('classe.nom_classe')->label('Classe')->icon('heroicon-o-academic-cap'),
-                        TextEntry::make('annee.libelle')->label('Année scolaire')->icon('heroicon-o-calendar'),
-                        TextEntry::make('periode')->label('Periode')->icon('heroicon-o-academic-cap'),
-                        TextEntry::make('moyenne')->label('Moyenne générale')->icon('heroicon-o-chart-bar'),
-                        TextEntry::make('rang')->label('Rang'),
-                        TextEntry::make('appreciation')->label('Appréciation')->icon('heroicon-o-chat-bubble-bottom-center-text'),
-                    ])->columns(3)
-            ]);
+        return $infolist->schema([
+            Section::make('Détails du Bulletin')->schema([
+                TextEntry::make('eleve.nom')->label('Élève')->icon('heroicon-o-user'),
+                TextEntry::make('classe.nom_classe')->label('Classe')->icon('heroicon-o-academic-cap'),
+                TextEntry::make('annee.libelle')->label('Année scolaire')->icon('heroicon-o-calendar'),
+                TextEntry::make('periode')->label('Periode')->icon('heroicon-o-academic-cap'),
+                TextEntry::make('moyenne')->label('Moyenne générale')->icon('heroicon-o-chart-bar'),
+                TextEntry::make('rang')->label('Rang'),
+                TextEntry::make('appreciation')->label('Appréciation')->icon('heroicon-o-chat-bubble-bottom-center-text'),
+            ])->columns(3)
+        ]);
     }
 
     public static function getRelations(): array

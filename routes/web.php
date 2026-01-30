@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Services\BulletinService;
+use App\Models\Bulletin;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +19,18 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Route pour générer les bulletins
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/bulletins/pdf/{bulletin}', function (Bulletin $bulletin, BulletinService $service) {
+        return $service->genererPDF($bulletin);
+    })->name('bulletin.pdf');
+});
+
+Route::get('/bulletins/pdf/{bulletin}', function (Bulletin $bulletin, BulletinService $service) {
+    return $service->genererPDF($bulletin);
+})->name('bulletin.pdf');
 
 Route::get('/dashboard', function () {
     return view('dashboard');

@@ -12,6 +12,7 @@ use App\Models\Inscription;
 use App\Models\Note;
 use App\Models\Absence;
 use App\Models\Bulletin;
+use App\Models\Classe;
 
 class Eleve extends Model
 {
@@ -71,6 +72,11 @@ class Eleve extends Model
     public function bulletins(): HasMany
     {
         return $this->hasMany(Bulletin::class);
+    }
+
+    public function classe(): BelongsTo
+    {
+        return $this->belongsTo(Classe::class);
     }
 
 }
