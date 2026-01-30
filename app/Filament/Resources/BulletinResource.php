@@ -24,6 +24,7 @@ class BulletinResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'Bulletins';
     protected static ?string $pluralModelLabel = 'Bulletins';
+    protected static ?string $navigationGroup = '';
     protected static ?int $navigationSort = 8;
 
     protected static ?string $recordTitleAttribute = 'id';

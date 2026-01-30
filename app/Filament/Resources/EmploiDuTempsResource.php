@@ -20,7 +20,9 @@ class EmploiDuTempsResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $navigationLabel = 'Emplois du Temps';
     protected static ?string $pluralModelLabel = 'Emplois du Temps';
-    protected static ?int $navigationSort = 9;
+    protected static ?string $navigationGroup = 'Scolarité';
+
+    protected static ?int $navigationSort = 11;
 
     protected static ?string $recordTitleAttribute = 'id';
 

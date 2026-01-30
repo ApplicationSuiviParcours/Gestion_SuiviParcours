@@ -9,14 +9,13 @@ class MatiereSeeder extends Seeder
 {
     public function run()
     {
-        Matiere::create([
-            'libelle' => 'Mathématiques',
-            'coefficient' => 5,
-        ]);
+        $matieres = ['Mathématiques', 'Français', 'Anglais', 'Physique', 'Chimie', 'Histoire', 'Géographie', 'Informatique'];
 
-        Matiere::create([
-            'libelle' => 'Français',
-            'coefficient' => 4,
-        ]);
+        foreach ($matieres as $libelle) {
+            Matiere::create([
+                'libelle' => $libelle,
+                'coefficient' => rand(1, 5),
+            ]);
+        }
     }
 }

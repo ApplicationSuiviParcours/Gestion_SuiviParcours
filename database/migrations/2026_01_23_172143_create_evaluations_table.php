@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('evaluations', function (Blueprint $table) {
             $table->id();
-            $table->enum('type_evaluation', ['devoir', 'examen']);
+            $table->enum('type_evaluation', ['devoir','composition', 'examen']);
             $table->date('date_evaluation');
             $table->foreignId('classe_id')->constrained('classes')->cascadeOnDelete();
             $table->foreignId('matiere_id')->constrained('matieres')->cascadeOnDelete();
