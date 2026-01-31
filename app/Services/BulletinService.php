@@ -5,17 +5,15 @@ namespace App\Services;
 use App\Models\Bulletin;
 use App\Models\Eleve;
 use App\Models\Matiere;
-use App\Models\AnneeScolaire;
 use App\Models\Classe;
 use App\Models\Note;
+use App\Models\AnneeScolaire;
 use App\Models\Evaluation;
+use App\Models\ClasseMatiere;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class BulletinService
 {
-    /**
-     * Génère les bulletins pour tous les élèves
-     */
     public function genererBulletins(): void
     {
         $eleves = Eleve::all();
@@ -27,54 +25,60 @@ class BulletinService
         foreach ($eleves as $eleve) {
             $classe = $eleve->classe ?? $classes->random();
 
-            // Création ou récupération du bulletin
-            $bulletin = Bulletin::firstOrCreate([
-                'eleve_id' => $eleve->id,
-                'classe_id' => $classe->id,
-                'annee_id' => $annee->id,
-                'periode' => 'Trimestre 1',
-            ]);
+            // Création du bulletin
+            $bulletin = Bulletin::firstOrCreate(
+                [
+                    'eleve_id' => $eleve->id,
+                    'classe_id' => $classe->id,
+                    'annee_id' => $annee->id,
+                    'periode' => 'Trimestre 1',
+                ]
+            );
 
             $totalPoints = 0;
             $totalCoef = 0;
 
             foreach ($matieres as $matiere) {
-                // Récupération d'une évaluation pour cette matière/classe
-                $evaluation = $evaluations
+                // Récupération du coefficient depuis classe_matiere
+                $classeMatiere = ClasseMatiere::where('classe_id', $classe->id)
                     ->where('matiere_id', $matiere->id)
-                    ->where('classe_id', $classe->id)
                     ->first();
 
-                if (!$evaluation) {
-                    // Si aucune évaluation trouvée, on saute
+                if (!$classeMatiere) {
+                    // Si pas de coefficient défini, on passe
                     continue;
                 }
 
-                $valeur = rand(8, 18); // Note aléatoire
-                $coef = rand(1, 5);    // Coefficient aléatoire
+                // On récupère toutes les évaluations de la matière pour la classe
+                $matiereEvaluations = $evaluations
+                    ->where('matiere_id', $matiere->id)
+                    ->where('classe_id', $classe->id);
 
-                // Création ou mise à jour de la note
-                Note::updateOrCreate(
-                    [
-                        'bulletin_id' => $bulletin->id,
-                        'eleve_id' => $eleve->id,
-                        'evaluation_id' => $evaluation->id,
-                    ],
-                    [
-                        'matiere_id' => $matiere->id,
-                        'valeur' => $valeur,
-                        'coefficient' => $coef,
-                    ]
-                );
+                foreach ($matiereEvaluations as $evaluation) {
+                    $noteValeur = rand(8, 18); // valeur aléatoire
+                    $coef = $classeMatiere->coefficient;
 
-                $totalPoints += $valeur * $coef;
-                $totalCoef += $coef;
+                    Note::updateOrCreate(
+                        [
+                            'bulletin_id' => $bulletin->id,
+                            'eleve_id' => $eleve->id,
+                            'evaluation_id' => $evaluation->id,
+                        ],
+                        [
+                            'matiere_id' => $matiere->id,
+                            'valeur' => $noteValeur,
+                            'coefficient' => $coef,
+                        ]
+                    );
+
+                    $totalPoints += $noteValeur * $coef;
+                    $totalCoef += $coef;
+                }
             }
 
             // Calcul de la moyenne
             $moyenne = $totalCoef > 0 ? round($totalPoints / $totalCoef, 2) : 0;
 
-            // Mise à jour du bulletin
             $bulletin->update([
                 'moyenne' => $moyenne,
                 'appreciation' => $this->appreciation($moyenne),
@@ -82,23 +86,6 @@ class BulletinService
         }
     }
 
-    /**
-     * Génère le PDF d’un bulletin spécifique
-     */
-    public function genererPDF(Bulletin $bulletin)
-    {
-        // Charger toutes les notes avec matière et évaluation
-        $bulletin->load('notes.matiere', 'notes.evaluation', 'eleve', 'classe', 'annee');
-
-        $pdf = Pdf::loadView('pdf.bulletin', compact('bulletin'));
-
-        // Nom du fichier : Bulletin_NomEleve.pdf
-        return $pdf->download("Bulletin_{$bulletin->eleve->nom}.pdf");
-    }
-
-    /**
-     * Retourne l'appréciation selon la moyenne
-     */
     private function appreciation(float $moyenne): string
     {
         return match (true) {
@@ -108,5 +95,11 @@ class BulletinService
             $moyenne >= 10 => 'Passable',
             default => 'Insuffisant',
         };
+    }
+
+    public function genererPDF(Bulletin $bulletin)
+    {
+        $pdf = Pdf::loadView('pdf.bulletin', compact('bulletin'));
+        return $pdf->download("Bulletin_{$bulletin->eleve->nom}.pdf");
     }
 }

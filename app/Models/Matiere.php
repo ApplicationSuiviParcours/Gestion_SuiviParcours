@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Classe;
 use App\Models\EnseignantMatiereClasse;
 use App\Models\EmploiDuTemps;
+use App\Models\Classe;
 
 class Matiere extends Model
 {
@@ -26,7 +26,7 @@ class Matiere extends Model
             'enseignant_matiere_classe', // table pivot
             'matiere_id',                // clé étrangère de Matiere dans pivot
             'classe_id'                  // clé étrangère de Classe dans pivot
-        )->withTimestamps();            // si pivot a created_at et updated_at
+        )->withPivot('coefficient')->withTimestamps();            // si pivot a created_at et updated_at
     }
 
     public function affectations(): HasMany
@@ -38,6 +38,9 @@ class Matiere extends Model
     {
         return $this->hasMany(EmploiDuTemps::class);
     }
+
+    
+
 
 
 }

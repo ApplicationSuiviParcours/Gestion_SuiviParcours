@@ -10,6 +10,7 @@ use App\Models\Bulletin;
 use App\Models\Matiere;
 use App\Models\Evaluation;
 
+
 class Note extends Model
 {
     use HasFactory;
@@ -46,4 +47,16 @@ class Note extends Model
     {
         return $this->belongsTo(Evaluation::class);
     }
+
+    protected static function booted()
+    {
+        static::saved(function ($note) {
+            $note->bulletin->recalculerMoyenne();
+        });
+
+        static::deleted(function ($note) {
+            $note->bulletin->recalculerMoyenne();
+        });
+    }
+
 }

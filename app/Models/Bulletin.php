@@ -41,6 +41,46 @@ class Bulletin extends Model
     { 
         return $this->belongsTo(AnneeScolaire::class); 
     }
+
+    
+    // 🔹 Méthode pour recalculer la moyenne automatiquement
+    public function recalculerMoyenne(): void
+    {
+        $notes = $this->notes;
+
+        if ($notes->count() === 0) {
+            $this->update(['moyenne' => 0]);
+            return;
+        }
+
+        $totalPoints = 0;
+        $totalCoef = 0;
+
+        foreach ($notes as $note) {
+            $totalPoints += $note->valeur * $note->coefficient;
+            $totalCoef += $note->coefficient;
+        }
+
+        $moyenne = $totalCoef > 0 ? round($totalPoints / $totalCoef, 2) : 0;
+
+        $this->update([
+            'moyenne' => $moyenne,
+            'appreciation' => $this->appreciation($moyenne),
+        ]);
+    }
+
+    // 🔹 Appréciation automatique selon la moyenne
+    private function appreciation(float $moyenne): string
+    {
+        return match (true) {
+            $moyenne >= 16 => 'Excellent',
+            $moyenne >= 14 => 'Très bien',
+            $moyenne >= 12 => 'Bien',
+            $moyenne >= 10 => 'Passable',
+            default => 'Insuffisant',
+        };
+    }
+
 }
 
  

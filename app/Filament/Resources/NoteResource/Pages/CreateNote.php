@@ -18,4 +18,27 @@ class CreateNote extends CreateRecord
             ->title('Note créée')
             ->body('La note a été créée avec succès.');
     }
+
+   protected function mutateFormDataBeforeCreate(array $data): array
+{
+    if (!isset($data['coefficient']) || $data['coefficient'] === null) {
+        $data['coefficient'] = $this->getCoefficient($data);
+    }
+
+    return $data;
+}
+
+private function getCoefficient(array $data): int
+{
+    $bulletin = \App\Models\Bulletin::with('classe.matieres')
+        ->find($data['bulletin_id']);
+
+    $matiere = $bulletin?->classe
+        ->matieres
+        ->firstWhere('id', $data['matiere_id']);
+
+    return (int) ($matiere?->pivot->coefficient ?? 1);
+}
+
+
 }

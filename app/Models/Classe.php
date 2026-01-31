@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use App\Models\Inscription;
 use App\Models\Eleve;
 use App\Models\EnseignantMatiereClasse;
 use App\Models\EmploiDuTemps;
+use App\Models\Matiere;
 
 
 class Classe extends Model
@@ -55,6 +57,13 @@ class Classe extends Model
     {
         return $this->hasMany(EmploiDuTemps::class);
     }
+
+    public function matieres(): BelongsToMany
+    {
+        return $this->belongsToMany(Matiere::class)
+            ->withPivot('coefficient');
+    }
+
 
 
 }

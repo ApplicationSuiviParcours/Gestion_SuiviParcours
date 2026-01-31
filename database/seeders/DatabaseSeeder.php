@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             BulletinSeeder::class,
             EmploiDuTempsSeeder::class,
             ParametreSeeder::class,
+            ClasseMatiereSeeder::class,
         ]);
     }
 }
